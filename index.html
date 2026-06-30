@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a3a52">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MyHymnal">
+    <title>MyHymnal</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Password Protection Screen -->
+    <div id="passwordScreen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1a3a52 0%, #4a90b8 100%); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+        <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-width: 400px; width: 90%; text-align: center;">
+            <h1 style="color: #1a3a52; font-size: 28px; margin-bottom: 10px; font-family: Georgia, serif;">Heart-Warming Songs & Hymns</h1>
+            <p style="color: #666; margin-bottom: 30px; font-size: 14px;">Church Members Only</p>
+            
+            <div class="password-container" style="margin-bottom: 15px;">
+                <input type="password" id="passwordInput" placeholder="Enter password" style="width: 100%; padding: 15px; padding-right: 50px; font-size: 16px; border: 2px solid #4a90b8; border-radius: 8px; font-family: Georgia, serif; box-sizing: border-box;">
+                <button type="button" class="password-toggle" id="togglePassword" onclick="togglePasswordVisibility()" title="Show/Hide Password">
+                    <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg id="eyeSlashIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <button onclick="checkPassword()" style="width: 100%; padding: 15px; font-size: 18px; background-color: #1a3a52; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: Georgia, serif; font-weight: bold;">
+                Enter
+            </button>
+            
+            <p id="errorMsg" style="color: red; margin-top: 15px; display: none; font-size: 14px;">Incorrect password. Please try again.</p>
+            
+            <p style="color: #999; margin-top: 30px; font-size: 12px;">For church members only. Contact your church administrator for access.</p>
+        </div>
+    </div>
+
+    <header>
+        <button id="menuBtn" class="menu-button">
+            <span class="hamburger"></span>
+        </button>
+        <button id="prevBtn" class="nav-button" title="Previous song" style="display: none;">◀</button>
+        <div class="header-title">
+            <span id="pageNumber" class="page-number"></span>
+            <h1 id="songTitle">Heart-Warming Songs & Hymns</h1>
+        </div>
+        <button id="nextBtn" class="nav-button" title="Next song" style="display: none;">▶</button>
+        <button id="settingsBtn" class="settings-button">⚙</button>
+    </header>
+
+    <nav id="sideMenu" class="side-menu">
+        <div class="menu-header">
+            <button id="homeBtn" class="home-button-menu" title="Home">⌂</button>
+            <h2>Hymnal Index</h2>
+            <button id="closeMenuBtn" class="close-menu">×</button>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search by title or page #">
+        </div>
+        <div class="menu-options">
+            <div style="text-align: center; font-size: 12px; color: #999; margin-bottom: 8px; padding-top: 10px; font-weight: 500;">Sort By</div>
+            <div class="sort-buttons" style="display: flex; gap: 4px; padding: 0 15px; justify-content: center;">
+                <button id="sortPage" class="sort-btn active" style="flex: 1; padding: 8px 6px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: Georgia, serif;">Page</button>
+                <button id="sortAlpha" class="sort-btn" style="flex: 1; padding: 8px 6px; background: #EEE; color: #666; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: Georgia, serif;">A-Z</button>
+                <button id="sortFavorites" class="sort-btn" style="flex: 1; padding: 8px 6px; background: #EEE; color: #666; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: Georgia, serif;">Favorites</button>
+            </div>
+        </div>
+        <div id="songList" class="song-list"></div>
+    </nav>
+
+    <div id="overlay" class="overlay"></div>
+
+    <main id="mainContent" class="main-content">
+        <div class="welcome-screen">
+            <h2>Welcome to</h2>
+            <h1>Heart-Warming Songs & Hymns</h1>
+            <p>Tap the menu button to browse songs</p>
+            
+            <!-- Favorites Section -->
+            <div id="favoritesHomeSection" style="margin-top: 30px; display: none;">
+                <h3 style="font-size: 20px; color: var(--primary-color); margin-bottom: 15px;">★ My Favorites</h3>
+                <div id="favoritesHomeList" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto;"></div>
+            </div>
+            
+            <div class="navigation-hints">
+                <p class="swipe-hint mobile-only">← Swipe right to start ←’</p>
+                <p class="keyboard-hint desktop-only">Press ←’ arrow key to start</p>
+            </div>
+        </div>
+        <div id="songDisplay" class="song-display" style="display: none;">
+            <div class="sheet-music-container" id="sheetMusicContainer" style="display: none;">
+                <div id="sheetMusicContent"></div>
+            </div>
+            <div class="lyrics-container" id="lyricsContainer">
+                <div id="lyricsContent" class="lyrics-content"></div>
+            </div>
+        </div>
+        
+        <!-- Copyright Footer -->
+        <footer style="text-align: center; padding: 15px 10px 20px; margin-top: 40px; border-top: 1px solid #EEE; color: #999; font-size: 10px; line-height: 1.5;">
+            <p style="margin-bottom: 5px;"><strong>Heart-Warming Songs & Hymns</strong></p>
+            <p style="margin-bottom: 5px;">Published by Sword of the Lord Publishers</p>
+            <p style="margin-bottom: 5px;">© All rights reserved by respective copyright holders</p>
+            <p style="margin-bottom: 0;">This digital hymnal is for church use only.</p>
+        </footer>
+    </main>
+
+    <div id="settingsPanel" class="settings-panel">
+        <div class="settings-header">
+            <h2>Settings</h2>
+            <button id="closeSettingsBtn" class="close-settings">×</button>
+        </div>
+        <div class="settings-content">
+            <!-- 1. Header Color at TOP -->
+            <div class="setting-group">
+                <label for="colorTheme">Header Color</label>
+                <select id="colorTheme" style="width: 100%; padding: 10px 12px; font-size: 16px; border: 2px solid var(--primary-color); border-radius: 5px; font-family: Georgia, serif; margin-top: 8px;">
+                    <option value="navy">Blue (Default)</option>
+                    <option value="brown">Brown</option>
+                </select>
+            </div>
+
+            <!-- 2. Font Size UNDER Header Color with snap points -->
+            <div class="setting-group">
+                <label for="fontSizeSlider" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span>Font Size</span>
+                    <span id="fontSizeValue" style="color: #666; font-size: 14px;">18px</span>
+                </label>
+                <input type="range" id="fontSizeSlider" min="14" max="32" value="18" step="1" list="fontSizes" style="width: 100%;">
+                <datalist id="fontSizes">
+                    <option value="14"></option><option value="15"></option><option value="16"></option><option value="17"></option>
+                    <option value="18"></option><option value="19"></option><option value="20"></option><option value="21"></option>
+                    <option value="22"></option><option value="23"></option><option value="24"></option><option value="25"></option>
+                    <option value="26"></option><option value="27"></option><option value="28"></option><option value="29"></option>
+                    <option value="30"></option><option value="31"></option><option value="32"></option>
+                </datalist>
+            </div>
+
+            <!-- 2b. Line Spacing Slider -->
+            <div class="setting-group">
+                <label for="spacingSlider" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span>Line Spacing</span>
+                    <span id="spacingValue" style="color: #666; font-size: 14px;">Normal</span>
+                </label>
+                <input type="range" id="spacingSlider" min="1.0" max="2.6" value="1.8" step="0.2" list="spacingSnaps" style="width: 100%;">
+                <datalist id="spacingSnaps">
+                    <option value="1.0"></option>
+                    <option value="1.2"></option>
+                    <option value="1.4"></option>
+                    <option value="1.6"></option>
+                    <option value="1.8"></option>
+                    <option value="2.0"></option>
+                    <option value="2.2"></option>
+                    <option value="2.4"></option>
+                    <option value="2.6"></option>
+                </datalist>
+            </div>
+
+            <!-- 3. Show Sheet Music with SLIDER toggle -->
+            <div class="setting-group">
+                <label style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Show Sheet Music</span>
+                    <label class="toggle-switch-small" style="margin: 0;">
+                        <input type="checkbox" id="showSheetMusic">
+                        <span class="toggle-slider-small"></span>
+                    </label>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div id="bookTabs" style="display:none;"></div>
+    <script src="songs.js"></script>
+    <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js');
+      }
+    </script>
+</body>
+</html>
