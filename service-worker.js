@@ -1,4 +1,4 @@
-const CACHE = 'myhymnal-v2';
+const CACHE = 'myhymnal-v3';
 const FILES = [
   './',
   './index.html',

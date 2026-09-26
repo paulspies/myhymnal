@@ -190,15 +190,20 @@ function handleSearch(e) {
     } else {
         filteredSongs = hymnsData.songs.filter(song => {
             if (!song || !song.title) return false;
-            
-            // Search by title - starts with query
-            const titleMatch = song.title.toLowerCase().startsWith(query);
-            
+
+            // Search by title - the query can be ANYWHERE in it (Paul, 2026-09-26: "power" did not
+            // find "There Is Power in the Blood", because this only matched the title's start)
+            const titleMatch = song.title.toLowerCase().includes(query);
+
             // Search by page number - starts with query
             const pageMatch = song.page && song.page.toString().startsWith(query);
-            
+
             return titleMatch || pageMatch;
         });
+        // Titles that START with the query still come first, so typing the opening words of a
+        // song lands on it at the top; the rest keep their current order.
+        const starts = s => s.title.toLowerCase().startsWith(query) ? 0 : 1;
+        filteredSongs.sort((a, b) => starts(a) - starts(b));
     }
 
     renderSongList();
