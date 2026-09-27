@@ -34,6 +34,8 @@ function setupEventListeners() {
     document.getElementById('fontSizeSlider').addEventListener('input', handleFontSizeChange);
     document.getElementById('spacingSlider').addEventListener('input', handleSpacingChange);
     document.getElementById('showSheetMusic').addEventListener('change', handleSheetMusicToggle);
+    // Same refresh-and-save as sheet music: redraw the open song, remember the choice
+    document.getElementById('showChords').addEventListener('change', handleSheetMusicToggle);
     document.getElementById('colorTheme').addEventListener('change', handleColorThemeChange);
     document.getElementById('mainContent').addEventListener('touchstart', handleTouchStart, { passive: true });
     document.getElementById('mainContent').addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -281,7 +283,11 @@ function selectSong(index) {
     }
     const lyricsContent = document.getElementById('lyricsContent');
     if (song.lyrics) {
-        lyricsContent.innerHTML = formatLyrics(song.lyrics, song.chords);
+        // Show Chords + a chord chart = the chart (the lyrics with [G] markers) in place of the plain
+        // lyrics. Everything else — verse tabs, chorus jump — works the same on either.
+        const chordView = document.getElementById('showChords').checked && !!song.chordLyrics;
+        lyricsContent.classList.toggle('chord-view', chordView);
+        lyricsContent.innerHTML = formatLyrics(chordView ? song.chordLyrics : song.lyrics, song.chords);
         const verseNums = [...new Set([...song.lyrics.matchAll(/^(\d+)\./gm)].map(m => m[1]))];
         renderBookTabs(verseNums, /^Chorus:/m.test(song.lyrics));
     } else {
@@ -292,7 +298,10 @@ function selectSong(index) {
     const sheetMusicContainer = document.getElementById('sheetMusicContainer');
     const sheetMusicContent = document.getElementById('sheetMusicContent');
     
-    if (showSheetMusic && song.sheetMusic) {
+    // Only a REAL file. 439 songs still point at the "SHEET_MUSIC_BASE_URL/…" placeholder, which
+    // nothing fills in, so those showed an empty frame (2026-09-26).
+    const hasSheet = !!song.sheetMusic && !song.sheetMusic.startsWith('SHEET_MUSIC_BASE_URL');
+    if (showSheetMusic && hasSheet) {
         // Check if it's a PDF or image
         if (song.sheetMusic.toLowerCase().endsWith('.pdf')) {
             // Display PDF in iframe
@@ -398,7 +407,9 @@ function formatLyrics(lyrics, chords) {
         .replace(/\x00(\w+)\x00/g, '<span id="$1"></span>')
         .replace(/Chorus:/g, '<span style="font-weight: bold; font-style: italic; color: var(--primary-color);">Chorus:</span>')
         .replace(/<br>Chorus(<br>|$)/g, '<br><span onclick="jumpToSection(\'chorus\')" style="font-style: italic; color: var(--primary-color); font-size: 0.9em; cursor: pointer; text-decoration: underline;">— Chorus —</span>$1')
-        .replace(/(\d+\.)/g, '<strong>$1</strong>');
+        .replace(/(\d+\.)/g, '<strong>$1</strong>')
+        // [G] before a word → the chord letter drawn above that word (chord charts only)
+        .replace(/\[([A-G][#b]?(?:m|maj|min|dim|aug|sus)?\d*(?:\/[A-G][#b]?)?)\]/g, '<span class="chord" data-chord="$1"></span>');
 
     if (chords) {
         formatted = `<div style="color: #999; font-weight: normal; margin-bottom: 12px; font-size: 13px; font-style: italic;">Chords: ${chords}</div>${formatted}`;
@@ -540,6 +551,7 @@ function savePreferences() {
         fontSize: document.getElementById('fontSizeSlider').value,
         lineSpacing: document.getElementById('spacingSlider').value,
         showSheetMusic: document.getElementById('showSheetMusic').checked,
+        showChords: document.getElementById('showChords').checked,
         colorTheme: document.getElementById('colorTheme').value
     };
     localStorage.setItem('hymnalPreferences', JSON.stringify(preferences));
@@ -565,6 +577,9 @@ function loadPreferences() {
             }
             if (preferences.showSheetMusic !== undefined) {
                 document.getElementById('showSheetMusic').checked = preferences.showSheetMusic;
+            }
+            if (preferences.showChords !== undefined) {
+                document.getElementById('showChords').checked = preferences.showChords;
             }
             if (preferences.colorTheme) {
                 document.getElementById('colorTheme').value = preferences.colorTheme;

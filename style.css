@@ -602,3 +602,11 @@ input:checked + .toggle-slider:before {
     box-shadow: -3px 2px 8px rgba(0,0,0,0.35);
 }
 .lyric-spacer { height: 0; }
+
+/* Chord chart (Show Chords): each chord letter sits above the word where it changes. The span
+   takes no width, so the words read exactly as the plain lyrics; the extra line height gives
+   the letters their own row. */
+#lyricsContent.chord-view { line-height: 2.6 !important; }
+.chord { position: relative; display: inline-block; width: 0; }
+.chord::before { content: attr(data-chord); position: absolute; left: 0; bottom: 0.95em;
+    font-weight: 700; font-size: 0.8em; color: var(--primary-color); white-space: nowrap; line-height: 1; }
